@@ -1,0 +1,11 @@
+{% extends 'expenses/base.html' %}
+{% block title %}Mon Profil{% endblock %}
+{% block content %}
+<h2>Mon Profil</h2>
+<p><strong>Utilisateur :</strong> {{ user.username }}</p>
+<p><strong>Bio :</strong> {{ user.profile.bio|default:"(vide)" }}</p>
+<p><strong>Téléphone :</strong> {{ user.profile.phone|default:"(vide)" }}</p>
+<a href="{% url 'expenses:profile_edit' %}" class="btn btn-primary">
+  Modifier mon profil
+</a>
+{% endblock %}

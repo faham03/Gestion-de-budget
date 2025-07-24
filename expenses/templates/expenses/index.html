@@ -1,0 +1,104 @@
+{% extends 'expenses/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Mes Dépenses{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Gestionnaire de Dépenses</h1>
+
+<!-- Formulaire d'ajout -->
+<form method="post" action="{% url 'expenses:add' %}" class="row g-3 mb-4">
+  {% csrf_token %}
+  <div class="col-md-3">
+    {{ form.description|as_crispy_field }}
+  </div>
+  <div class="col-md-2">
+    {{ form.amount|as_crispy_field }}
+  </div>
+  <div class="col-md-3">
+    {{ form.category|as_crispy_field }}
+  </div>
+  <div class="col-md-3">
+    {{ form.date|as_crispy_field }}
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-primary">Ajouter</button>
+  </div>
+</form>
+
+<!-- Filtre par mois -->
+<form method="get" class="mb-4">
+  <div class="input-group w-auto">
+    <input
+      type="month"
+      name="month"
+      value="{{ filter_month }}"
+      class="form-control"
+    >
+    <button class="btn btn-secondary">Filtrer</button>
+  </div>
+</form>
+
+<!-- Liste des dépenses -->
+<ul class="list-group mb-4">
+  {% for e in expenses %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      <div>
+        {{ e.date }} – {{ e.category }} – {{ e.description }} : €{{ e.amount }}
+      </div>
+      <div>
+        <a
+          href="{% url 'expenses:edit' e.pk %}"
+          class="badge bg-primary text-decoration-none me-2"
+        >
+          Modifier
+        </a>
+        <a
+          href="{% url 'expenses:delete' e.pk %}"
+          class="badge bg-danger text-decoration-none"
+        >
+          Supprimer
+        </a>
+      </div>
+    </li>
+  {% empty %}
+    <li class="list-group-item">Aucune dépense.</li>
+  {% endfor %}
+</ul>
+<div class="d-flex justify-content-end mb-3">
+  <a
+    href="{% url 'expenses:export_csv' %}?{% if filter_month %}month={{ filter_month }}{% endif %}"
+    class="btn btn-outline-success btn-sm"
+  >
+    Exporter CSV
+  </a>
+</div>
+
+<!-- Graphique Chart.js -->
+<canvas id="expenseChart"></canvas>
+<script>
+  const labels = [
+    {% for item in total_by_cat %}
+      '{{ item.category }}'{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+  ];
+  const values = [
+    {% for item in total_by_cat %}
+      {{ item.total }}{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+  ];
+
+  const data = {
+    labels: labels,
+    datasets: [{
+      data: values,
+      backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
+    }]
+  };
+
+  new Chart(
+    document.getElementById('expenseChart'),
+    { type: 'pie', data: data }
+  );
+</script>
+{% endblock %}

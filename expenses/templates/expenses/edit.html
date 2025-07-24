@@ -1,0 +1,21 @@
+{% extends 'expenses/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Modifier Dépense{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Modifier Dépense</h1>
+
+<form method="post" action="{% url 'expenses:edit' expense.pk %}" class="row g-3 mb-4">
+  {% csrf_token %}
+  <div class="col-md-4">{{ form.description|as_crispy_field }}</div>
+  <div class="col-md-2">{{ form.amount|as_crispy_field }}</div>
+  <div class="col-md-3">{{ form.category|as_crispy_field }}</div>
+  <div class="col-md-3">{{ form.date|as_crispy_field }}</div>
+
+  <div class="col-12">
+    <button type="submit" class="btn btn-success">Enregistrer</button>
+    <a href="{% url 'expenses:index' %}" class="btn btn-secondary">Annuler</a>
+  </div>
+</form>
+{% endblock %}
