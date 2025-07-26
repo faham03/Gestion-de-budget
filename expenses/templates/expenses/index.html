@@ -6,6 +6,9 @@
 {% block content %}
 <h1 class="mb-4">Gestionnaire de Dépenses</h1>
 
+<!-- Devise utilisée -->
+<p class="text-muted mb-3">Devise utilisée : <strong>{{ request.user.profile.currency }}</strong></p>
+
 <!-- Formulaire d'ajout -->
 <form method="post" action="{% url 'expenses:add' %}" class="row g-3 mb-4">
   {% csrf_token %}
@@ -44,7 +47,8 @@
   {% for e in expenses %}
     <li class="list-group-item d-flex justify-content-between align-items-center">
       <div>
-        {{ e.date }} – {{ e.category }} – {{ e.description }} : €{{ e.amount }}
+        {{ e.date }} – {{ e.category }} – {{ e.description }} :
+        {{ e.amount }} {{ request.user.profile.currency }}
       </div>
       <div>
         <a
@@ -65,6 +69,7 @@
     <li class="list-group-item">Aucune dépense.</li>
   {% endfor %}
 </ul>
+
 <div class="d-flex justify-content-end mb-3">
   <a
     href="{% url 'expenses:export_csv' %}?{% if filter_month %}month={{ filter_month }}{% endif %}"
@@ -88,11 +93,14 @@
     {% endfor %}
   ];
 
+  const currencyLabel = "{{ request.user.profile.currency }}";
+
   const data = {
     labels: labels,
     datasets: [{
       data: values,
-      backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
+      backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
+      label: 'Total par catégorie (' + currencyLabel + ')'
     }]
   };
 

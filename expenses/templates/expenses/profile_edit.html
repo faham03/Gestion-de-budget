@@ -2,15 +2,34 @@
 {% load crispy_forms_tags %}
 
 {% block title %}Modifier Profil{% endblock %}
+
 {% block content %}
-<h2>Modifier Profil</h2>
+<h2 class="mb-4">Modifier Profil</h2>
+
 <form method="post" class="row g-3">
   {% csrf_token %}
-  <div class="col-12">{{ form.bio|as_crispy_field }}</div>
-  <div class="col-md-4">{{ form.phone|as_crispy_field }}</div>
+
+  <div class="col-12">
+    {{ form.bio|as_crispy_field }}
+  </div>
+
+  <div class="col-md-4">
+    {{ form.phone|as_crispy_field }}
+  </div>
+
+  <div class="col-md-4">
+    <p class="text-muted">Sélectionnez votre devise préférée :</p>
+    {{ form.currency|as_crispy_field }}
+  </div>
+
   <div class="col-12">
     <button type="submit" class="btn btn-success">Enregistrer</button>
     <a href="{% url 'expenses:profile' %}" class="btn btn-secondary">Annuler</a>
   </div>
 </form>
+
+<hr class="mt-5">
+<p class="text-muted">
+  Devise actuellement enregistrée : <strong>{{ request.user.profile.currency }}</strong>
+</p>
 {% endblock %}

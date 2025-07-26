@@ -10,5 +10,6 @@ urlpatterns = [
     path('export/', views.export_csv, name='export_csv'),
     path('profile/', views.profile_view, name='profile'),
     path('profile/edit/', views.profile_edit, name='profile_edit'),
+    path('ajouter-multi/', views.add_multiple_expenses, name='add_multiple_expenses'),
 
 ]

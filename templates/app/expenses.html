@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajouter des dépenses</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <style>
+        .expense-form {
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body class="container mt-5">
+    <h2 class="mb-4">Ajout de dépenses</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+        <div id="form-container">
+            <div class="expense-form row">
+                <div class="col-md-3">
+                    <input type="text" name="description" class="form-control" placeholder="Description">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" step="0.01" name="amount" class="form-control" placeholder="Montant">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" name="category" class="form-control" placeholder="Catégorie">
+                </div>
+                <div class="col-md-3">
+                    <input type="date" name="date" class="form-control">
+                </div>
+            </div>
+        </div>
+
+        <button type="button" id="add-form" class="btn btn-outline-primary mt-3">+ Ajouter une dépense</button>
+        <button type="submit" class="btn btn-success mt-3 ms-2">Enregistrer</button>
+    </form>
+
+    <script>
+        document.getElementById("add-form").addEventListener("click", function () {
+            const original = document.querySelector(".expense-form");
+            const clone = original.cloneNode(true);
+
+            const inputs = clone.querySelectorAll("input");
+            inputs.forEach(input => input.value = "");
+
+            document.getElementById("form-container").appendChild(clone);
+        });
+    </script>
+</body>
+</html>

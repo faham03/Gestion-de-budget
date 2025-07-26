@@ -1,5 +1,4 @@
 import csv
-
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -17,11 +16,11 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .forms import ExpenseForm, ProfileForm, CustomUserCreationForm
 from .models import Expense, Profile
 
-
+# 🏠 Page d'accueil avec filtre par mois et total par catégorie
 @login_required
 def index(request):
     month = request.GET.get('month')
-    qs = Expense.objects.all()
+    qs = Expense.objects.filter(user=request.user)  # 🔥 Filtrage par utilisateur
     if month:
         qs = qs.filter(date__startswith=month)
     total_by_cat = qs.values('category').annotate(total=Sum('amount'))
@@ -34,26 +33,28 @@ def index(request):
     }
     return render(request, 'expenses/index.html', context)
 
-
+# ➕ Ajout simple d'une dépense via formulaire Django
 @login_required
 def add_expense(request):
     if request.method == 'POST':
         form = ExpenseForm(request.POST)
         if form.is_valid():
-            form.save()
+            expense = form.save(commit=False)
+            expense.user = request.user  # 🔥 Associer à l'utilisateur connecté
+            expense.save()
     return redirect('expenses:index')
 
-
+# 🗑 Suppression d'une dépense
 @login_required
 def delete_expense(request, pk):
-    exp = get_object_or_404(Expense, pk=pk)
+    exp = get_object_or_404(Expense, pk=pk, user=request.user)  # 🔐 Sécurité
     exp.delete()
     return redirect('expenses:index')
 
-
+# ✏️ Édition d'une dépense
 @login_required
 def edit_expense(request, pk):
-    expense = get_object_or_404(Expense, pk=pk)
+    expense = get_object_or_404(Expense, pk=pk, user=request.user)
     if request.method == 'POST':
         form = ExpenseForm(request.POST, instance=expense)
         if form.is_valid():
@@ -69,18 +70,38 @@ def edit_expense(request, pk):
     }
     return render(request, 'expenses/edit.html', context)
 
+# 🆕 Ajout dynamique de plusieurs dépenses avec saisie libre
+@login_required
+def add_multiple_expenses(request):
+    if request.method == 'POST':
+        descriptions = request.POST.getlist('description')
+        amounts = request.POST.getlist('amount')
+        categories = request.POST.getlist('category')
+        dates = request.POST.getlist('date')
 
+        for desc, amt, cat, dt in zip(descriptions, amounts, categories, dates):
+            if desc and amt and cat and dt:
+                Expense.objects.create(
+                    user=request.user,  # 🔥 Lier chaque dépense à l'utilisateur
+                    description=desc,
+                    amount=amt,
+                    category=cat,
+                    date=dt
+                )
+        return redirect('expenses:index')
+
+    return render(request, 'expenses/multi_add.html')
+
+# 👤 Inscription avec e-mail de confirmation
 def signup(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            # crée l'utilisateur mais ne l'active pas tout de suite
             user = form.save(commit=False)
             user.email = form.cleaned_data['email']
             user.is_active = False
             user.save()
 
-            # envoi du mail d’activation
             current_site = get_current_site(request)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
@@ -101,7 +122,7 @@ def signup(request):
         form = CustomUserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})
 
-
+# 🔓 Activation du compte
 def activate(request, uidb64, token):
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
@@ -117,13 +138,13 @@ def activate(request, uidb64, token):
     else:
         return render(request, 'registration/activation_invalid.html')
 
-
+# 👤 Affichage du profil utilisateur
 @login_required
 def profile_view(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
     return render(request, 'expenses/profile.html', {'profile': profile})
 
-
+# 📝 Édition du profil utilisateur
 @login_required
 def profile_edit(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
@@ -136,11 +157,11 @@ def profile_edit(request):
         form = ProfileForm(instance=profile)
     return render(request, 'expenses/profile_edit.html', {'form': form})
 
-
+# 📤 Export CSV des dépenses filtrées par mois
 @login_required
 def export_csv(request):
     month = request.GET.get('month')
-    qs = Expense.objects.all().order_by('-date')
+    qs = Expense.objects.filter(user=request.user).order_by('-date')  # 🔥 Filtrage
     if month:
         qs = qs.filter(date__startswith=month)
 
@@ -151,8 +172,8 @@ def export_csv(request):
     response['Content-Disposition'] = f'attachment; filename="{filename}.csv"'
 
     writer = csv.writer(response)
-    writer.writerow(['Date', 'Description', 'Catégorie', 'Montant (€)'])
+    writer.writerow(['Date', 'Description', 'Catégorie', f'Montant ({request.user.profile.currency})'])
     for e in qs:
-        writer.writerow([e.date, e.description, e.category, f"{e.amount:.2f}"])
+        writer.writerow([e.date, e.description, e.category, f"{e.amount:.2f} {request.user.profile.currency}"])
 
     return response

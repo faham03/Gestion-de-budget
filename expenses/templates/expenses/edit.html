@@ -6,10 +6,16 @@
 {% block content %}
 <h1 class="mb-4">Modifier Dépense</h1>
 
+<!-- Devise actuelle -->
+<p class="text-muted mb-3">Devise utilisée : <strong>{{ request.user.profile.currency }}</strong></p>
+
 <form method="post" action="{% url 'expenses:edit' expense.pk %}" class="row g-3 mb-4">
   {% csrf_token %}
   <div class="col-md-4">{{ form.description|as_crispy_field }}</div>
-  <div class="col-md-2">{{ form.amount|as_crispy_field }}</div>
+  <div class="col-md-2">
+    {{ form.amount|as_crispy_field }}
+    <small class="form-text text-muted">en {{ request.user.profile.currency }}</small>
+  </div>
   <div class="col-md-3">{{ form.category|as_crispy_field }}</div>
   <div class="col-md-3">{{ form.date|as_crispy_field }}</div>
 
